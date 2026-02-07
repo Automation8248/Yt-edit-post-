@@ -5,7 +5,7 @@ from google.oauth2.credentials import Credentials
 
 # --- CONFIGURATION ---
 TAGS_TO_ADD = ["Automation", "Python", "Tech", "Viral"]  # Yahan apne tags dalein
-CHANNEL_CUSTOM_NAME = "Mera Tech Channel" # Telegram message ke liye channel name
+CHANNEL_CUSTOM_NAME = "Lucas Hart" # Telegram message ke liye channel name
 
 def get_youtube_service():
     # GitHub Secrets se credentials uthana
