@@ -1,0 +1,33 @@
+name: YouTube Auto Publisher
+
+on:
+  schedule:
+    # UTC Time: 5:30 AM = India 11:00 AM
+    # Agar time change karna hai to '30 5' ko change karein
+    - cron: '30 5 * * *'
+  workflow_dispatch: # Button to run manually for testing
+
+jobs:
+  publish_video:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Python & Libraries
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          
+      - name: Install Requirements
+        run: pip install -r requirements.txt
+
+      - name: Run Automation Script
+        env:
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python youtube_auto.py
