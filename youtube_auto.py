@@ -1,6 +1,7 @@
 import os
 import requests
 import urllib.parse
+import re  # Regex for filename detection
 from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
 
@@ -15,7 +16,7 @@ CONFIG = {
     "category_id": "27",  
     
     # 2. AI Prompts (No Stars, No Hashtags in text)
-    "title_prompt": "Write a short viral motivational quote video title in English under 60 characters. No hashtags. No quotes.",
+    "title_prompt": "Write a short viral motivational quote video title in English under 60 characters. No hashtags. No quotes. No emoji.",
     "desc_prompt": "Write a deep, educational and inspiring explanation (max 2 sentences) about the importance of success and learning. Plain text only. No stars. No hashtags inside text.",
     
     # 3. SEO Settings
@@ -23,18 +24,9 @@ CONFIG = {
     
     # 4. Tags List (Must be more than 8)
     "tags": [
-        "Education",              # Tag 1
-        "Motivation",             # Tag 2
-        "Learning",               # Tag 3
-        "Success Mindset",        # Tag 4
-        "Study Tips",             # Tag 5
-        "Life Lessons",           # Tag 6
-        "Wisdom",                 # Tag 7
-        "Self Improvement",       # Tag 8
-        "Educational Video",      # Tag 9
-        "Facts",                  # Tag 10
-        "Knowledge",              # Tag 11
-        "Inspiration"             # Tag 12
+        "Education", "Motivation", "Learning", "Success Mindset", 
+        "Study Tips", "Life Lessons", "Wisdom", "Self Improvement", 
+        "Educational Video", "Facts", "Knowledge", "Inspiration"
     ]
 }
 
@@ -75,13 +67,36 @@ def ask_pollinations_ai(prompt):
         print(f"AI Error: {e}")
         return None
 
+def should_replace_title(title):
+    """
+    Check karta hai ki kya Title badalne ki zarurat hai.
+    Agar title filename jaisa dikhta hai to True return karega.
+    """
+    # 1. Agar title bahut chhota hai
+    if len(title) < 5:
+        return True
+    
+    # 2. Agar title mein 'Untitled' ya 'Upload' word hai
+    if "untitled" in title.lower() or "upload" in title.lower():
+        return True
+        
+    # 3. Agar title mein Spaces nahi hain (e.g., VID_20250207) -> Filename hai
+    if " " not in title:
+        return True
+        
+    # 4. Agar title mein Date format hai (e.g., 2025-02-07)
+    if re.search(r'\d{4}-\d{2}-\d{2}', title):
+        return True
+        
+    return False
+
 def send_telegram_alert(video_id, channel_name):
     """
-    Sends Telegram Alert in Specific Format:
-    1. Channel Name (Bold, Red Style)
-    2. Successful Message
-    3. Category
-    4. Link
+    Telegram Message Format:
+    Channel Name (Big Red)
+    Message
+    Category
+    Link
     """
     bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
     chat_id = os.environ.get("TELEGRAM_CHAT_ID")
@@ -91,11 +106,7 @@ def send_telegram_alert(video_id, channel_name):
 
     video_link = f"https://youtu.be/{video_id}"
     
-    # --- TELEGRAM FORMATTING LOGIC ---
-    # Telegram API does not support CSS color/size. 
-    # We use HTML <b> (Bold) and Uppercase to simulate "Big Size".
-    # We use 🔴 Emoji to simulate "Red Color".
-    
+    # Red & Bold Simulation using Emoji and HTML
     formatted_name = f"<b>🔴 {channel_name.upper()} 🔴</b>"
 
     message = (
@@ -105,7 +116,6 @@ def send_telegram_alert(video_id, channel_name):
         f"{video_link}"
     )
     
-    # 'parse_mode': 'HTML' is strictly required for Bold/Format
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     payload = {
         'chat_id': chat_id, 
@@ -118,7 +128,7 @@ def send_telegram_alert(video_id, channel_name):
 
 def main():
     try:
-        print(f"--- STARTING STRICT AUTOMATION FOR: {TOPIC_NAME} ---")
+        print(f"--- STARTING AUTOMATION ---")
         youtube = get_youtube_service()
         
         # 1. Latest Video Search
@@ -150,7 +160,7 @@ def main():
             
             if privacy in ["private", "unlisted"]:
                 target_video = video_data
-                print(f"Target Found: {vid_id}")
+                print(f"Target Found: {vid_id} | Current Title: {video_data['snippet']['title']}")
                 break 
         
         if not target_video:
@@ -162,16 +172,19 @@ def main():
         
         # --- AI & CONTENT LOGIC ---
         
-        # A) TITLE GENERATION
+        # A) TITLE GENERATION (Updated Logic)
         current_title = snippet["title"]
         new_title = current_title
         
-        if len(current_title) < 10 or "upload" in current_title.lower() or "untitled" in current_title.lower():
-            print("AI Writing Title...")
+        # Check karega ki kya title filename/date jaisa hai
+        if should_replace_title(current_title):
+            print("Detected generic/filename title. Generating new AI Title...")
             ai_title = ask_pollinations_ai(CONFIG["title_prompt"])
             if ai_title:
                 new_title = ai_title.replace('"', '').replace("'", "")
                 if len(new_title) > 70: new_title = new_title[:67] + "..."
+        else:
+            print("Existing title looks good. Keeping it.")
         
         # B) DESCRIPTION GENERATION
         print("AI Writing Description...")
@@ -203,7 +216,9 @@ def main():
                 "embeddable": True,
                 "license": "youtube"
             }
-            # Altered Content is 'No' by default
+            # IMP: Altered Content 'No' Logic
+            # Hum yahan koi bhi AI label metadata nahi bhej rahe hain.
+            # YouTube API by default isse "Altered Content: No" manta hai.
         }
         
         youtube.videos().update(
@@ -211,9 +226,9 @@ def main():
             body=update_body
         ).execute()
         
-        print(f"SUCCESS: Video Updated | Category: Education")
+        print(f"SUCCESS: Video Public | Title: {new_title}")
         
-        # Telegram Message with Name Size/Color logic
+        # Telegram Message
         display_name = snippet["channelTitle"] if snippet["channelTitle"] else CHANNEL_CUSTOM_NAME
         send_telegram_alert(vid_id, display_name)
 
