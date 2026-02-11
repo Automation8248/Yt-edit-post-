@@ -20,9 +20,9 @@ CONFIG = {
     "desc_prompt": "Write a deep, educational and inspiring explanation (max 2 sentences) about the importance of success and learning. Plain text only. No stars. No hashtags inside text.",
     
     # 3. SEO Settings
-    "seo_hashtags": "#education #educationalvideo #learning #knowledge #facts #lifelessons #wisdom #motivation #inspiration #selfimprovement #successmindset #studytips #growthmindset #personaldevelopment #dailymotivation #positivemindset #studentlife #motivationalvideo #educationalshorts #ytshorts #Education #Motivation #Learning #Success #StudyMotivation #Wisdom #Shorts #Facts #Education #EducationalVideo #Facts #Inspiration #Knowledge #Learning #LifeLessons #Motivation #SelfImprovement #StudyTips #SuccessMindset #Wisdom",
+    "seo_hashtags": "#education #educationalvideo #learning #knowledge #facts #lifelessons #wisdom #motivation #inspiration #selfimprovement #successmindset #studytips #growthmindset #personaldevelopment #dailymotivation #positivemindset #studentlife #motivationalvideo #educationalshorts #ytshorts #Education #Motivation #Learning #Success #StudyMotivation #Wisdom #Shorts #Facts #Education #EducationalVideo #Facts #Inspiration #Knowledge #Learning #LifeLessons #Motivation #SelfImprovement #StudyTips #SuccessMindset #Wisdom #USA #USAEducation #ViralUSA #EnglishQuotes #GlobalLearning",
     
-    # 4. Tags List (Must be more than 8)
+    # 4. Tags List (Targeting USA Audience)
     "tags": [
         "education", "educationalvideo", "learning", "knowledge", "facts", 
         "lifelessons", "wisdom", "motivation", "inspiration", "selfimprovement", 
@@ -31,8 +31,9 @@ CONFIG = {
         "educationalshorts", "ytshorts", "Education", "Motivation", "Learning", 
         "Success", "StudyMotivation", "Wisdom", "Shorts", "Facts", "Education", 
         "EducationalVideo", "Facts", "Inspiration", "Knowledge", "Learning", 
-        "LifeLessons", "Motivation", "SelfImprovement", "StudyTips", 
-        "SuccessMindset", "Wisdom"
+        "LifeLessons", "Motivation", "SelfImprovement", "StudyTips", "SuccessMindset", 
+        "Wisdom", "USA", "United States", "American Students", "US Trending", 
+        "Global Motivation", "English Language", "Ivy League Vibes", "Success USA"
     ]
 }
 
