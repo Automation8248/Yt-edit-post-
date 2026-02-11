@@ -123,29 +123,37 @@ def send_telegram_alert(video_id, channel_name):
     }
     
     requests.post(url, json=payload)
-
 def main():
     try:
         print(f"--- STARTING AUTOMATION ---")
         youtube = get_youtube_service()
         
-        # 1. Latest Video Search
-        request = youtube.search().list(
-            part="snippet",
-            forMine=True,
-            type="video",
-            maxResults=5
+        # 1. Connect to Channel & Get Uploads Playlist
+        channel_response = youtube.channels().list(
+            part="snippet,contentDetails",
+            mine=True
+        ).execute()
+        
+        uploads_playlist_id = channel_response["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
+        print(f"✅ Channel Connected: {channel_response['items'][0]['snippet']['title']}")
+
+        # 2. Get Recent Videos (Includes Private/Unlisted)
+        playlist_request = youtube.playlistItems().list(
+            part="contentDetails",
+            playlistId=uploads_playlist_id,
+            maxResults=10  
         )
-        response = request.execute()
+        playlist_response = playlist_request.execute()
         
-        target_video = None
+        target_video_id = None
+        target_video_snippet = None
         
-        # 2. Find Unlisted/Private Video
-        for item in response.get("items", []):
-            vid_id = item["id"]["videoId"]
+        # 3. Find Unlisted/Private Video
+        for item in playlist_response.get("items", []):
+            vid_id = item["contentDetails"]["videoId"]
             
             vid_request = youtube.videos().list(
-                part="snippet,status,contentDetails",
+                part="snippet,status",
                 id=vid_id
             )
             vid_response = vid_request.execute()
@@ -157,66 +165,78 @@ def main():
             privacy = video_data["status"]["privacyStatus"]
             
             if privacy in ["private", "unlisted"]:
-                target_video = video_data
-                print(f"Target Found: {vid_id} | Current Title: {video_data['snippet']['title']}")
+                target_video_id = vid_id
+                target_video_snippet = video_data["snippet"]
+                print(f"Target Found: {vid_id} | Status: {privacy}")
                 break 
         
-        if not target_video:
+        if not target_video_id:
             print("No Unlisted/Private videos found.")
             return
 
-        vid_id = target_video["id"]
-        snippet = target_video["snippet"]
+        vid_id = target_video_id
+        snippet = target_video_snippet
         
         # --- AI & CONTENT LOGIC ---
         
-        # A) TITLE GENERATION (Updated Logic)
+        # A) TITLE GENERATION
         current_title = snippet["title"]
         new_title = current_title
         
-        # Check karega ki kya title filename/date jaisa hai
         if should_replace_title(current_title):
-            print("Detected generic/filename title. Generating new AI Title...")
+            print("Generating new AI Title...")
             ai_title = ask_pollinations_ai(CONFIG["title_prompt"])
             if ai_title:
                 new_title = ai_title.replace('"', '').replace("'", "")
                 if len(new_title) > 70: new_title = new_title[:67] + "..."
         else:
-            print("Existing title looks good. Keeping it.")
+            print("Keeping existing title.")
         
         # B) DESCRIPTION GENERATION
         print("AI Writing Description...")
         ai_desc = ask_pollinations_ai(CONFIG["desc_prompt"])
         if not ai_desc:
-            ai_desc = "Learn and grow with these motivational quotes."
+            ai_desc = "Motivational video."
             
         final_description = f"{ai_desc}\n\n{CONFIG['seo_hashtags']}"
         
-        # C) TAGS LOGIC (STRICT CHECK >= 8)
-        final_tags = CONFIG["tags"]
+        # C) TAGS LOGIC (SMART FIX)
+        raw_tags = CONFIG["tags"]
+        final_tags = []
+
+        # Check: Agar tags ek hi string mein hain (space separated)
+        if len(raw_tags) == 1 and " " in raw_tags[0]:
+            # String ko tod kar list banao aur '#' hatao
+            print("Fixing Tags format automatically...")
+            final_tags = [t.replace("#", "") for t in raw_tags[0].split() if t.strip()]
+        else:
+            final_tags = raw_tags
+
+        # Ensure Minimum Tags
         if len(final_tags) < 8:
-            final_tags.extend(["Viral", "Trending", "Must Watch", "New Video"])
+            final_tags.extend(["Viral", "Trending", "Must Watch", "New Video", "Shorts"])
+
+        # Remove Duplicates & Limit to 30 tags
+        final_tags = list(set(final_tags))[:30]
+        print(f"Total Tags to Add: {len(final_tags)}")
 
         # --- UPDATE VIDEO ---
         
         update_body = {
             "id": vid_id,
             "snippet": {
-                "categoryId": CONFIG["category_id"], # Fixed to 27
+                "categoryId": CONFIG["category_id"],
                 "title": new_title,
                 "description": final_description,
-                "tags": final_tags, # 8+ Tags
+                "tags": final_tags,  # Ab yahan poori list jayegi
                 "channelTitle": snippet["channelTitle"]
             },
             "status": {
-                "privacyStatus": "public",       # Public
-                "selfDeclaredMadeForKids": False, # Not Made For Kids
+                "privacyStatus": "public",
+                "selfDeclaredMadeForKids": False,
                 "embeddable": True,
                 "license": "youtube"
             }
-            # IMP: Altered Content 'No' Logic
-            # Hum yahan koi bhi AI label metadata nahi bhej rahe hain.
-            # YouTube API by default isse "Altered Content: No" manta hai.
         }
         
         youtube.videos().update(
@@ -226,12 +246,12 @@ def main():
         
         print(f"SUCCESS: Video Public | Title: {new_title}")
         
-        # Telegram Message
+        # Telegram Alert
         display_name = snippet["channelTitle"] if snippet["channelTitle"] else CHANNEL_CUSTOM_NAME
         send_telegram_alert(vid_id, display_name)
 
     except Exception as e:
         print(f"CRITICAL ERROR: {e}")
-
+        
 if __name__ == "__main__":
     main()
