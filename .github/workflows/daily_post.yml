@@ -2,9 +2,10 @@ name: YouTube Auto Publisher
 
 on:
   schedule:
-    # UTC Time: 5:30 AM = India 11:00 AM
-    # Agar time change karna hai to '30 5' ko change karein
-    - cron: '30 5 * * *'
+    # New York: 5:55 PM (17:55)
+    # India: 4:25 AM (Agle din)
+    # UTC: 10:55 PM (22:55)
+    - cron: '55 22 * * *'
   workflow_dispatch: # Button to run manually for testing
 
 jobs:
