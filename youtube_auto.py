@@ -20,11 +20,19 @@ CONFIG = {
     "desc_prompt": "Write a deep, educational and inspiring explanation (max 2 sentences) about the importance of success and learning. Plain text only. No stars. No hashtags inside text.",
     
     # 3. SEO Settings
-    "seo_hashtags": "#education #educationalvideo #learning #knowledge #facts #lifelessons #wisdom #motivation #inspiration #selfimprovement #successmindset #studytips #growthmindset #personaldevelopment #dailymotivation #positivemindset #studentlife #motivationalvideo #educationalshorts #ytshorts #Education #Motivation #Learning #Success #StudyMotivation #Wisdom #Shorts #Facts",
+    "seo_hashtags": "#education #educationalvideo #learning #knowledge #facts #lifelessons #wisdom #motivation #inspiration #selfimprovement #successmindset #studytips #growthmindset #personaldevelopment #dailymotivation #positivemindset #studentlife #motivationalvideo #educationalshorts #ytshorts #Education #Motivation #Learning #Success #StudyMotivation #Wisdom #Shorts #Facts #Education #EducationalVideo #Facts #Inspiration #Knowledge #Learning #LifeLessons #Motivation #SelfImprovement #StudyTips #SuccessMindset #Wisdom",
     
     # 4. Tags List (Must be more than 8)
     "tags": [
-        "#education #educationalvideo #learning #knowledge #facts #lifelessons #wisdom #motivation #inspiration #selfimprovement #successmindset #studytips #growthmindset #personaldevelopment #dailymotivation #positivemindset #studentlife #motivationalvideo #educationalshorts #ytshorts",
+        "education", "educationalvideo", "learning", "knowledge", "facts", 
+        "lifelessons", "wisdom", "motivation", "inspiration", "selfimprovement", 
+        "successmindset", "studytips", "growthmindset", "personaldevelopment", 
+        "dailymotivation", "positivemindset", "studentlife", "motivationalvideo", 
+        "educationalshorts", "ytshorts", "Education", "Motivation", "Learning", 
+        "Success", "StudyMotivation", "Wisdom", "Shorts", "Facts", "Education", 
+        "EducationalVideo", "Facts", "Inspiration", "Knowledge", "Learning", 
+        "LifeLessons", "Motivation", "SelfImprovement", "StudyTips", 
+        "SuccessMindset", "Wisdom"
     ]
 }
 
